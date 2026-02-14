@@ -53,7 +53,7 @@ function App() {
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
       <div className="flex-1 flex flex-col ml-64 transition-all duration-300">
-        <Header cameraId={selectedCamera} user={currentUser} onLogout={handleLogout} />
+        <Header cameraId={selectedCamera} user={currentUser} onLogout={handleLogout} onSwitchCamera={() => setSelectedCamera(null)} />
 
         <main className="flex-1 overflow-hidden relative">
           <div className={`absolute inset-0 transition-opacity duration-300 ${activeView === 'monitor' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
