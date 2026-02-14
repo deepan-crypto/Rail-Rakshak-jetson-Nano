@@ -24,6 +24,8 @@ export default function Login({ onLoginSuccess }) {
             const data = await response.json();
 
             if (data.success) {
+                localStorage.setItem('railRakshakToken', data.token);
+                localStorage.setItem('railRakshakRole', data.role);
                 onLoginSuccess(data.role);
             } else {
                 setError(data.message || 'Invalid credentials');
