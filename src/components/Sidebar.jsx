@@ -1,11 +1,12 @@
 import React from 'react';
-import { LayoutDashboard, FileText, TrainFront, Activity } from 'lucide-react';
+import { LayoutDashboard, FileText, Activity } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 export default function Sidebar({ activeView, setActiveView }) {
     return (
         <div className="w-64 bg-zinc-950 border-r border-zinc-800 flex flex-col h-screen fixed left-0 top-0 z-10 text-zinc-100 shadow-xl shadow-black/50">
             <div className="p-6 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950/50 backdrop-blur-sm">
-                <TrainFront className="w-8 h-8 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                <img src={logo} alt="Rail-Rakshak Logo" className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
                 <div>
                     <h1 className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Rail-Rakshak</h1>
                     <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Edge AI Safety</p>
@@ -16,8 +17,8 @@ export default function Sidebar({ activeView, setActiveView }) {
                 <button
                     onClick={() => setActiveView('monitor')}
                     className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300 group relative overflow-hidden ${activeView === 'monitor'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                            : 'text-zinc-400 hover:bg-zinc-900 hover:text-white border border-transparent hover:border-zinc-800'
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white border border-transparent hover:border-zinc-800'
                         }`}
                 >
                     {activeView === 'monitor' && (
@@ -30,8 +31,8 @@ export default function Sidebar({ activeView, setActiveView }) {
                 <button
                     onClick={() => setActiveView('irpsm')}
                     className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg transition-all duration-300 group relative overflow-hidden ${activeView === 'irpsm'
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                            : 'text-zinc-400 hover:bg-zinc-900 hover:text-white border border-transparent hover:border-zinc-800'
+                        ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white border border-transparent hover:border-zinc-800'
                         }`}
                 >
                     {activeView === 'irpsm' && (
