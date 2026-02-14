@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code, ShieldCheck, Search } from 'lucide-react';
 import { railwayContacts, contactCategories } from '../data/contacts';
+import logo from '../assets/logo.png';
 
 export default function CameraSelection({ onCameraSelect }) {
     const [activeTab, setActiveTab] = useState('cameras');
@@ -35,13 +36,11 @@ export default function CameraSelection({ onCameraSelect }) {
             {/* Sidebar */}
             <div className="w-64 bg-zinc-900/80 backdrop-blur-md border-r border-zinc-800 flex flex-col z-20">
                 <div className="p-6 border-b border-zinc-800">
-                    <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                        <div className="w-8 h-8 rounded bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                            <Camera className="w-5 h-5" />
-                        </div>
+                    <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
                         Rail-Rakshak
                     </h2>
-                    <p className="text-zinc-500 text-xs mt-1 ml-10">Surveillance Portal</p>
+                    <p className="text-zinc-500 text-xs mt-1 ml-11">Surveillance Portal</p>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
