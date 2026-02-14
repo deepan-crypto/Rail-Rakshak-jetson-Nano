@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
-import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code, ShieldCheck } from 'lucide-react';
-import { railwayContacts } from '../data/contacts';
+import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code, ShieldCheck, Search } from 'lucide-react';
+import { railwayContacts, contactCategories } from '../data/contacts';
 
 export default function CameraSelection({ onCameraSelect }) {
     const [activeTab, setActiveTab] = useState('cameras');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    const filteredContacts = railwayContacts.filter(contact => {
+        const matchesSearch =
+            contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contact.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contact.contact.includes(searchQuery);
+
+        const matchesCategory = selectedCategory === 'All' || contact.category === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+    });
 
     const cameras = [
         { id: 'CAM_01', location: 'Locomotive Front', status: 'LIVE', signal: 92, type: 'Main Feed' },
@@ -208,41 +221,72 @@ export default function CameraSelection({ onCameraSelect }) {
 
                 {/* Contacts View */}
                 {activeTab === 'contacts' && (
-                    <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="mb-8 border-b border-zinc-800 pb-6">
-                            <h1 className="text-3xl font-bold mb-2 text-blue-400">Emergency & General Contacts</h1>
-                            <p className="text-zinc-400">Indian Railways Zonal Headquarters Directory</p>
+                    <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">
+                        <div className="mb-6 border-b border-zinc-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-2 text-blue-400">Emergency & General Contacts</h1>
+                                <p className="text-zinc-400">Comprehensive Directory of Railway Officials</p>
+                            </div>
+
+                            {/* Search & Filter Controls */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="relative">
+                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search name, role, or number..."
+                                        className="bg-zinc-900 border border-zinc-700 text-zinc-200 pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 w-full sm:w-64"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <select
+                                    className="bg-zinc-900 border border-zinc-700 text-zinc-200 px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                >
+                                    {contactCategories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl max-h-[500px] overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-4 bg-zinc-800/80 p-4 font-bold text-xs uppercase text-zinc-500 tracking-wider sticky top-0 z-10 backdrop-blur-md">
-                                <div>Zone / Division</div>
-                                <div>Designation</div>
-                                <div>Official Name</div>
-                                <div>Contact Number</div>
+                        <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl flex flex-col min-h-0">
+                            <div className="grid grid-cols-12 bg-zinc-800/80 p-4 font-bold text-xs uppercase text-zinc-500 tracking-wider sticky top-0 z-10 backdrop-blur-md border-b border-zinc-700">
+                                <div className="col-span-3">Division / Department</div>
+                                <div className="col-span-3">Designation</div>
+                                <div className="col-span-3">Official Name</div>
+                                <div className="col-span-3">Contact Number</div>
                             </div>
-                            <div className="divide-y divide-zinc-800/50">
-                                {railwayContacts.map((item, idx) => (
-                                    <div key={idx} className="grid grid-cols-4 p-4 hover:bg-zinc-800/20 transition-colors items-center text-sm">
-                                        <div className="font-medium text-emerald-400">{item.zone}</div>
-                                        <div className="text-zinc-300 flex items-center gap-2">
-                                            <ShieldCheck className="w-3 h-3 text-zinc-500" />
-                                            {item.role}
+                            <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
+                                {filteredContacts.length > 0 ? (
+                                    filteredContacts.map((item, idx) => (
+                                        <div key={idx} className="grid grid-cols-12 p-3 hover:bg-zinc-800/40 transition-colors items-center text-sm rounded border border-transparent hover:border-zinc-800/50 group">
+                                            <div className="col-span-3 font-medium text-emerald-400 truncate pr-2" title={item.category}>{item.category}</div>
+                                            <div className="col-span-3 text-zinc-300 flex items-center gap-2 truncate pr-2" title={item.designation}>
+                                                <ShieldCheck className="w-3.5 h-3.5 text-zinc-600 group-hover:text-emerald-500 transition-colors shrink-0" />
+                                                {item.designation}
+                                            </div>
+                                            <div className="col-span-3 text-zinc-400 font-mono truncate pr-2" title={item.name}>
+                                                {item.name}
+                                            </div>
+                                            <div className="col-span-3 text-blue-400 font-mono flex items-center gap-2 truncate" title={item.contact}>
+                                                <Phone className="w-3.5 h-3.5 shrink-0" />
+                                                {item.contact}
+                                            </div>
                                         </div>
-                                        <div className="text-zinc-400 font-mono">
-                                            {item.name}
-                                        </div>
-                                        <div className="text-blue-400 font-mono flex items-center gap-2">
-                                            <Phone className="w-3 h-3" />
-                                            {item.contact}
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center text-zinc-500 italic">
+                                        No contacts found matching your search.
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
 
-                        <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
-                            <Info className="w-5 h-5 text-amber-500 mt-0.5" />
+                        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3 shrink-0">
+                            <Info className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                             <div>
                                 <h4 className="text-amber-500 font-bold text-sm mb-1">National Emergency Helpline</h4>
                                 <p className="text-zinc-400 text-xs">For immediate assistance regarding rail accidents or safety hazards, please dial <span className="text-white font-bold">139</span> (Rail Madad) available 24/7 across all states.</p>
