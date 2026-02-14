@@ -12,9 +12,28 @@ function App() {
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [activeView, setActiveView] = useState('monitor');
 
+  // Auto-login on mount
+  React.useEffect(() => {
+    const token = localStorage.getItem('railRakshakToken');
+    const role = localStorage.getItem('railRakshakRole');
+    if (token && role) {
+      setIsAuthenticated(true);
+      setCurrentUser(role);
+    }
+  }, []);
+
   const handleLoginSuccess = (userRole) => {
     setCurrentUser(userRole);
     setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('railRakshakToken');
+    localStorage.removeItem('railRakshakRole');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setSelectedCamera(null);
+    setActiveView('monitor');
   };
 
   const handleCameraSelect = (cameraId) => {
@@ -34,7 +53,7 @@ function App() {
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
 
       <div className="flex-1 flex flex-col ml-64 transition-all duration-300">
-        <Header cameraId={selectedCamera} user={currentUser} />
+        <Header cameraId={selectedCamera} user={currentUser} onLogout={handleLogout} />
 
         <main className="flex-1 overflow-hidden relative">
           <div className={`absolute inset-0 transition-opacity duration-300 ${activeView === 'monitor' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
