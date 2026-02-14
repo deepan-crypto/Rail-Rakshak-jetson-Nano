@@ -183,3 +183,6 @@ export default function LiveMonitor({ cameraId }) {
         </div>
     );
 }
+
+
+
