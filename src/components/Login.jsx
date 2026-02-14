@@ -37,12 +37,7 @@ export default function Login({ onLoginSuccess }) {
         }
     };
 
-    const defaultCreds = [
-        { u: 'admin', p: 'admin123' },
-        { u: 'controller', p: 'railsafe2024' },
-        { u: 'supervisor', p: 'track_secure' },
-        { u: 'guest', p: 'view_only' },
-    ];
+
 
     return (
         <div className="min-h-screen bg-zinc-950 flex items-center justify-center relative overflow-hidden">
@@ -105,19 +100,7 @@ export default function Login({ onLoginSuccess }) {
                     </button>
                 </form>
 
-                <div className="mt-8 border-t border-zinc-800 pt-6">
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest text-center mb-4">Default Access Credentials</p>
-                    <div className="grid grid-cols-2 gap-2">
-                        {defaultCreds.map((cred, idx) => (
-                            <div key={idx} className="bg-zinc-900/50 border border-zinc-800 p-2 rounded text-xs cursor-pointer hover:bg-zinc-800 hover:border-zinc-600 transition-colors"
-                                onClick={() => { setUsername(cred.u); setPassword(cred.p); }}>
-                                <span className="text-zinc-400">{cred.u}</span>
-                                <span className="text-zinc-600 mx-1">/</span>
-                                <span className="text-emerald-500/60 font-mono">{cred.p}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+
             </div>
         </div>
     );
