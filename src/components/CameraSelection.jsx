@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code } from 'lucide-react';
+import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code, ShieldCheck } from 'lucide-react';
+import { railwayContacts } from '../data/contacts';
 
 export default function CameraSelection({ onCameraSelect }) {
     const [activeTab, setActiveTab] = useState('cameras');
@@ -11,14 +12,7 @@ export default function CameraSelection({ onCameraSelect }) {
         { id: 'CAM_04', location: 'Rear View', status: 'OFFLINE', signal: 0, type: 'Backup' },
     ];
 
-    const railwayContacts = [
-        { zone: 'Northern Railway', hq: 'New Delhi', contact: '011-23386683', email: 'gm@nr.railnet.gov.in' },
-        { zone: 'Western Railway', hq: 'Mumbai', contact: '022-22005670', email: 'gm@wr.railnet.gov.in' },
-        { zone: 'Southern Railway', hq: 'Chennai', contact: '044-25353148', email: 'gm@sr.railnet.gov.in' },
-        { zone: 'Eastern Railway', hq: 'Kolkata', contact: '033-22300444', email: 'gm@er.railnet.gov.in' },
-        { zone: 'Central Railway', hq: 'Mumbai', contact: '022-22620944', email: 'gm@cr.railnet.gov.in' },
-        { zone: 'South Central Railway', hq: 'Secunderabad', contact: '040-27822874', email: 'gm@scr.railnet.gov.in' },
-    ];
+
 
     return (
         <div className="min-h-screen bg-zinc-950 flex font-sans relative overflow-hidden text-white">
@@ -220,28 +214,27 @@ export default function CameraSelection({ onCameraSelect }) {
                             <p className="text-zinc-400">Indian Railways Zonal Headquarters Directory</p>
                         </div>
 
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl">
-                            <div className="grid grid-cols-4 bg-zinc-800/50 p-4 font-bold text-xs uppercase text-zinc-500 tracking-wider">
-                                <div>Zone</div>
-                                <div>Headquarters</div>
-                                <div>Control Room</div>
-                                <div>Email</div>
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl max-h-[500px] overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-4 bg-zinc-800/80 p-4 font-bold text-xs uppercase text-zinc-500 tracking-wider sticky top-0 z-10 backdrop-blur-md">
+                                <div>Zone / Division</div>
+                                <div>Designation</div>
+                                <div>Official Name</div>
+                                <div>Contact Number</div>
                             </div>
-                            <div>
+                            <div className="divide-y divide-zinc-800/50">
                                 {railwayContacts.map((item, idx) => (
-                                    <div key={idx} className="grid grid-cols-4 p-4 border-t border-zinc-800 hover:bg-zinc-800/30 transition-colors items-center">
-                                        <div className="font-medium text-zinc-200">{item.zone}</div>
-                                        <div className="text-sm text-zinc-400 flex items-center gap-2">
-                                            <Globe className="w-3 h-3 text-zinc-600" />
-                                            {item.hq}
+                                    <div key={idx} className="grid grid-cols-4 p-4 hover:bg-zinc-800/20 transition-colors items-center text-sm">
+                                        <div className="font-medium text-emerald-400">{item.zone}</div>
+                                        <div className="text-zinc-300 flex items-center gap-2">
+                                            <ShieldCheck className="w-3 h-3 text-zinc-500" />
+                                            {item.role}
                                         </div>
-                                        <div className="text-sm text-blue-400 font-mono flex items-center gap-2">
+                                        <div className="text-zinc-400 font-mono">
+                                            {item.name}
+                                        </div>
+                                        <div className="text-blue-400 font-mono flex items-center gap-2">
                                             <Phone className="w-3 h-3" />
                                             {item.contact}
-                                        </div>
-                                        <div className="text-sm text-zinc-400 flex items-center gap-2 overflow-hidden text-ellipsis">
-                                            <Mail className="w-3 h-3 text-zinc-600" />
-                                            {item.email}
                                         </div>
                                     </div>
                                 ))}
