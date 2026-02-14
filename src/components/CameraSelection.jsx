@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail } from 'lucide-react';
+import { Camera, ChevronRight, Video, Radio, Signal, LayoutGrid, Info, Phone, Globe, Mail, Github, Code } from 'lucide-react';
 
 export default function CameraSelection({ onCameraSelect }) {
     const [activeTab, setActiveTab] = useState('cameras');
@@ -84,8 +84,8 @@ export default function CameraSelection({ onCameraSelect }) {
                                     onClick={() => cam.status === 'LIVE' && onCameraSelect(cam.id)}
                                     disabled={cam.status !== 'LIVE'}
                                     className={`group relative overflow-hidden rounded-xl border transition-all duration-300 text-left ${cam.status === 'LIVE'
-                                            ? 'bg-zinc-900 border-zinc-800 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] cursor-pointer'
-                                            : 'bg-zinc-900/50 border-zinc-800/50 opacity-60 cursor-not-allowed'
+                                        ? 'bg-zinc-900 border-zinc-800 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] cursor-pointer'
+                                        : 'bg-zinc-900/50 border-zinc-800/50 opacity-60 cursor-not-allowed'
                                         }`}
                                 >
                                     <div className="aspect-video bg-black/50 relative flex items-center justify-center overflow-hidden">
@@ -112,8 +112,8 @@ export default function CameraSelection({ onCameraSelect }) {
                                             </div>
                                             <div className="flex flex-col items-end">
                                                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${cam.status === 'LIVE'
-                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                        : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    : 'bg-red-500/10 text-red-400 border-red-500/20'
                                                     }`}>
                                                     {cam.status}
                                                 </span>
@@ -177,6 +177,35 @@ export default function CameraSelection({ onCameraSelect }) {
                                     </div>
                                     <h4 className="font-bold mb-2">IRPSM Integration</h4>
                                     <p className="text-sm text-zinc-500">Seamlessly pushes defects to the Indian Railways Project Sanctions Management portal.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl mt-6">
+                                <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+                                    <Code className="w-5 h-5 text-indigo-400" />
+                                    Lead Developers
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <a href="https://github.com/prabu411" target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-4 p-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-indigo-500/50 hover:bg-zinc-800 transition-all group">
+                                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
+                                            <Github className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-zinc-200 group-hover:text-indigo-300">Prabu</div>
+                                            <div className="text-xs text-zinc-500">@prabu411</div>
+                                        </div>
+                                    </a>
+                                    <a href="https://github.com/deepan-crypto" target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-4 p-4 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-indigo-500/50 hover:bg-zinc-800 transition-all group">
+                                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center group-hover:bg-indigo-500/20 group-hover:text-indigo-400 transition-colors">
+                                            <Github className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-zinc-200 group-hover:text-indigo-300">Deepan</div>
+                                            <div className="text-xs text-zinc-500">@deepan-crypto</div>
+                                        </div>
+                                    </a>
                                 </div>
                             </div>
                         </div>
