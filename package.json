@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "lucide-react": "^0.564.0",
+    "mongoose": "^9.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

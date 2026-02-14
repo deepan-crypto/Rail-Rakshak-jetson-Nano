@@ -1,7 +1,7 @@
 import React from 'react';
-import { Signal, Cpu, ShieldCheck, Bell } from 'lucide-react';
+import { Signal, Cpu, ShieldCheck, Bell, User } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ cameraId, user }) {
     return (
         <header className="h-18 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between px-8 sticky top-0 z-20 shadow-lg shadow-black/20">
             <div className="flex items-center gap-6">
@@ -13,7 +13,7 @@ export default function Header() {
                     <span className="text-xs font-bold text-emerald-400 tracking-wider uppercase font-mono">System Live</span>
                 </div>
                 <h2 className="text-zinc-500 text-xs font-mono hidden md:block tracking-wide">
-                    DEVICE_ID: <span className="text-zinc-200 font-bold">EDGE-NODE-042</span>
+                    SOURCE: <span className="text-zinc-200 font-bold">{cameraId || 'NO_SIGNAL'}</span>
                 </h2>
             </div>
 
@@ -36,8 +36,14 @@ export default function Header() {
                         <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-zinc-950 animate-pulse"></span>
                     </button>
 
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center shadow-[0_0_10px_rgba(99,102,241,0.1)]">
-                        <ShieldCheck className="w-4.5 h-4.5 text-indigo-400" />
+                    <div className="flex items-center gap-3 pl-2">
+                        <div className="text-right hidden sm:block">
+                            <div className="text-xs font-bold text-zinc-300 capitalize">{user || 'Guest'}</div>
+                            <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Operator</div>
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center shadow-[0_0_10px_rgba(99,102,241,0.1)]">
+                            <User className="w-4.5 h-4.5 text-indigo-400" />
+                        </div>
                     </div>
                 </div>
             </div>

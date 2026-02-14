@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, MapPin, Gauge, Send, ScanLine } from 'lucide-react';
 
-export default function LiveMonitor() {
+export default function LiveMonitor({ cameraId }) {
     const [speed, setSpeed] = useState(45);
     const [coordinates, setCoordinates] = useState({ lat: 28.6139, lng: 77.2090 });
 
@@ -56,7 +56,7 @@ export default function LiveMonitor() {
                                 LIVE FEED
                             </div>
                             <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full border border-white/5 text-xs font-mono text-zinc-300">
-                                CAM_01 • 1080p • 60FPS
+                                {cameraId} • 1080p • 60FPS
                             </div>
                         </div>
 
