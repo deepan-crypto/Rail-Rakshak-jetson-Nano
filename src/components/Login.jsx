@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Lock, User, KeyRound, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, User, KeyRound, AlertCircle } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 export default function Login({ onLoginSuccess }) {
     const [username, setUsername] = useState('');
@@ -47,8 +48,8 @@ export default function Login({ onLoginSuccess }) {
 
             <div className="bg-black/40 backdrop-blur-xl border border-zinc-800 p-8 rounded-2xl shadow-2xl w-full max-w-md relative z-10">
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-                        <ShieldCheck className="w-8 h-8 text-emerald-500" />
+                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10 p-4">
+                        <img src={logo} alt="Rail-Rakshak Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold text-white tracking-tight">Rail-Rakshak Portal</h1>
                     <p className="text-zinc-500 text-sm mt-2">Secure Access Gateway</p>
