@@ -1,7 +1,7 @@
 import React from 'react';
-import { Signal, Cpu, ShieldCheck, Bell, User, LogOut } from 'lucide-react';
+import { Signal, Cpu, ShieldCheck, Bell, User, LogOut, RefreshCcw } from 'lucide-react';
 
-export default function Header({ cameraId, user, onLogout }) {
+export default function Header({ cameraId, user, onLogout, onSwitchCamera }) {
     return (
         <header className="h-18 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between px-8 sticky top-0 z-20 shadow-lg shadow-black/20">
             <div className="flex items-center gap-6">
@@ -12,9 +12,21 @@ export default function Header({ cameraId, user, onLogout }) {
                     </span>
                     <span className="text-xs font-bold text-emerald-400 tracking-wider uppercase font-mono">System Live</span>
                 </div>
-                <h2 className="text-zinc-500 text-xs font-mono hidden md:block tracking-wide">
-                    SOURCE: <span className="text-zinc-200 font-bold">{cameraId || 'NO_SIGNAL'}</span>
-                </h2>
+                <div className="flex items-center gap-3">
+                    <h2 className="text-zinc-500 text-xs font-mono hidden md:block tracking-wide">
+                        SOURCE: <span className="text-zinc-200 font-bold">{cameraId || 'NO_SIGNAL'}</span>
+                    </h2>
+                    {cameraId && (
+                        <button
+                            onClick={onSwitchCamera}
+                            className="text-xs flex items-center gap-1.5 text-zinc-500 hover:text-indigo-400 transition-colors px-2 py-1 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800"
+                            title="Switch Camera Feed"
+                        >
+                            <RefreshCcw className="w-3 h-3" />
+                            Change
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="flex items-center gap-8">
