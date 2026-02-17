@@ -1,0 +1,26 @@
+{
+  "name": "rail-rakshak-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API with real-time telemetry streaming for Rail Rakshak",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test:telemetry": "node test-telemetry.js single",
+    "test:stream": "node test-telemetry.js stream 30"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.2.1",
+    "cors": "^2.8.6",
+    "body-parser": "^2.2.2",
+    "jsonwebtoken": "^9.0.3",
+    "dotenv": "^17.3.1",
+    "socket.io": "^4.7.2",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
