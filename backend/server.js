@@ -4,16 +4,29 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new SocketIOServer(httpServer, {
+    cors: {
+        origin: ["http://localhost:5173", "http://localhost:3000", "https://vercel.app"],
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    maxHttpBufferSize: 10 * 1024 * 1024 // 10MB limit for base64 images
+});
+
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak')
@@ -90,10 +103,143 @@ app.get('/api/logs', verifyToken, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// ==================== TELEMETRY & EDGE AI ROUTES ====================
+
+// Telemetry Data Schema
+const TelemetrySchema = new mongoose.Schema({
+    timestamp: String,
+    gps_location: {
+        lat: Number,
+        lon: Number
+    },
+    hazards: [{
+        class: Number,
+        name: String,
+        confidence: Number,
+        xmin: Number,
+        ymin: Number,
+        xmax: Number,
+        ymax: Number
+    }],
+    image_stream: String, // Base64 encoded image
+    createdAt: { type: Date, default: Date.now, expires: 3600 } // Auto-delete after 1 hour
+});
+
+const Telemetry = mongoose.model('Telemetry', TelemetrySchema);
+
+// POST endpoint to receive Jetson Orin Nano telemetry
+app.post('/api/telemetry', async (req, res) => {
+    try {
+        const { timestamp, gps_location, hazards, image_stream } = req.body;
+
+        // Validate payload
+        if (!timestamp || !gps_location || !hazards || !image_stream) {
+            return res.status(400).json({ 
+                error: 'Missing required fields: timestamp, gps_location, hazards, image_stream' 
+            });
+        }
+
+        console.log(`\n📹 [TELEMETRY RECEIVED] Time: ${timestamp} | Hazards: ${hazards.length}`);
+        for (const hazard of hazards) {
+            console.log(`   ⚠️  ${hazard.name} (Confidence: ${(hazard.confidence * 100).toFixed(2)}%)`);
+        }
+
+        // Save to MongoDB for historical tracking
+        const telemetryEntry = new Telemetry({
+            timestamp,
+            gps_location,
+            hazards,
+            image_stream
+        });
+        await telemetryEntry.save();
+
+        // Broadcast to all connected WebSocket clients in real-time
+        io.emit('telemetry-update', {
+            timestamp,
+            gps_location,
+            hazards,
+            image_stream,
+            receivedAt: new Date().toISOString()
+        });
+
+        res.json({ 
+            success: true, 
+            message: 'Telemetry received and broadcasted',
+            hazardCount: hazards.length
+        });
+    } catch (err) {
+        console.error('❌ [TELEMETRY ERROR]:', err.message);
+        res.status(500).json({ error: 'Failed to process telemetry', details: err.message });
+    }
+});
+
+// GET endpoint to retrieve recent telemetry data
+app.get('/api/telemetry/recent', verifyToken, async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        const telemetryData = await Telemetry.find()
+            .sort({ createdAt: -1 })
+            .limit(limit);
+        res.json(telemetryData);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch recent telemetry' });
+    }
+});
+
+// GET endpoint to retrieve telemetry with hazards only
+app.get('/api/telemetry/hazards', verifyToken, async (req, res) => {
+    try {
+        const hazardData = await Telemetry.find({ hazards: { $ne: [] } })
+            .sort({ createdAt: -1 })
+            .limit(20);
+        res.json(hazardData);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch hazard data' });
+    }
+});
+
+// ==================== WEBSOCKET HANDLERS ====================
+
+io.on('connection', (socket) => {
+    console.log(`✅ [WS] Client connected: ${socket.id} | Total connections: ${io.engine.clientsCount}`);
+
+    // Send current connection status
+    socket.emit('connection-status', {
+        status: 'connected',
+        clientId: socket.id,
+        timestamp: new Date().toISOString()
+    });
+
+    // Handle custom events from frontend
+    socket.on('request-latest-telemetry', async () => {
+        try {
+            const latestTelemetry = await Telemetry.findOne().sort({ createdAt: -1 });
+            if (latestTelemetry) {
+                socket.emit('latest-telemetry', latestTelemetry);
+            }
+        } catch (err) {
+            console.error('Error fetching latest telemetry:', err);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`❌ [WS] Client disconnected: ${socket.id} | Remaining connections: ${io.engine.clientsCount}`);
+    });
+
+    socket.on('error', (error) => {
+        console.error(`⚠️  [WS] Socket error for ${socket.id}:`, error);
+    });
+});
+
+// ==================== SERVER STARTUP ====================
+
+httpServer.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`🔒 JWT Authentication Enabled`);
-    console.log(`📋 Default Credentials:`);
+    console.log(`📡 WebSocket (Socket.io) Server running on ws://localhost:${PORT}`);
+    console.log(`📸 Telemetry endpoint: POST /api/telemetry`);
+    console.log(`📊 Max payload size: 10MB`);
+    console.log(`\n📋 Default Credentials:`);
     Object.keys(CREDENTIALS).forEach(user => {
         console.log(`   - ${user} : ${CREDENTIALS[user]}`);
     });
