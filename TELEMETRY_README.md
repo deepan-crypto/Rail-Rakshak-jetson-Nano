@@ -53,8 +53,8 @@ npm run test:stream 60        # Continuous stream for 60s
 │         NVIDIA Jetson Orin Nano (Edge Device)           │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  YOLOv5 Running on RC Car                        │   │
-│  │  - Road Hazard Detection (Pothole, Crack, etc)  │   │
-│  │  - Real-time inference on video stream          │   │
+│  │  - Road Hazard Detection (Pothole, Crack, etc)   │   │
+│  │  - Real-time inference on video stream           │   │
 │  └──────────────────────────────────┬───────────────┘   │
 └─────────────────────────────────────┼───────────────────┘
                                       │
@@ -66,16 +66,16 @@ npm run test:stream 60        # Continuous stream for 60s
 │              Backend (Node.js + Express)                │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  /api/telemetry (POST)                           │   │
-│  │  - Receives detection payload from Jetson       │   │
-│  │  - Validates & stores in MongoDB                │   │
-│  │  - Broadcasts via WebSocket in real-time        │   │
-│  └──────────────┬──────────────────────────────────┘   │
+│  │  - Receives detection payload from Jetson        │   │
+│  │  - Validates & stores in MongoDB                 │   │
+│  │  - Broadcasts via WebSocket in real-time         │   │
+│  └──────────────┬──────────────────────────────────-┘   │
 │                 │ Socket.io WebSocket                   │
 │  ┌──────────────▼──────────────────────────────────┐   │
-│  │  MongoDB (Telemetry Storage)                    │   │
-│  │  - 1-hour TTL on records                        │   │
-│  │  - Query by hazard type, location, confidence  │   │
-│  └──────────────────────────────────────────────────┘   │
+│  │  MongoDB (Telemetry Storage)                     │   │
+│  │  - 1-hour TTL on records                         │  |
+│  │  - Query by hazard type, location, confidence    │   │
+│  └──────────────────────────────────────────────────┘  |
 └─────────────────┬──────────────────────────────────────┘
                   │ Real-time WebSocket Broadcast
                   │ (telemetry-update event)
