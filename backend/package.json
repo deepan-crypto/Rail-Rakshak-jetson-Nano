@@ -11,14 +11,15 @@
     "test:stream": "node test-telemetry.js stream 30"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "mongoose": "^9.2.1",
-    "cors": "^2.8.6",
+    "axios": "^1.6.2",
     "body-parser": "^2.2.2",
-    "jsonwebtoken": "^9.0.3",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1",
     "socket.io": "^4.7.2",
-    "axios": "^1.6.2"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
