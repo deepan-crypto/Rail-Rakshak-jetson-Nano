@@ -25,7 +25,7 @@ class TelemetryUploader:
     Sends YOLOv5 detections to Rail Rakshak backend in real-time
     """
     
-    def __init__(self, backend_url="http://localhost:5000/api/telemetry", 
+    def __init__(self, backend_url="https://your-backend.onrender.com/api/telemetry", 
                  gps_lat=28.6139, gps_lon=77.2090,
                  send_interval=2, jpeg_quality=80, 
                  async_mode=False, buffer_size=10):
