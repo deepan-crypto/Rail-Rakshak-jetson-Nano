@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { AlertTriangle, MapPin, Gauge, Send, ScanLine, WifiOff, Wifi } from 'lucide-react';
-import { SOCKET_URL } from '../utils/apiClient';
+
+// Socket URL from env — falls back to localhost for dev
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 export default function LiveMonitor({ cameraId }) {
     const [connected, setConnected] = useState(false);
@@ -263,10 +265,10 @@ export default function LiveMonitor({ cameraId }) {
                                 >
                                     <div className="flex justify-between items-start mb-3">
                                         <div className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border shadow-sm ${alert.severity === 'high'
-                                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                                : alert.severity === 'medium'
-                                                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                                    : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                            : alert.severity === 'medium'
+                                                ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
                                             }`}>
                                             {alert.severity}
                                         </div>
@@ -281,7 +283,7 @@ export default function LiveMonitor({ cameraId }) {
                                         <span className="text-[10px] text-zinc-500 font-mono">
                                             AI Conf:{' '}
                                             <span className={`font-bold ${parseFloat(alert.prob) > 85 ? 'text-emerald-500' :
-                                                    parseFloat(alert.prob) > 65 ? 'text-amber-500' : 'text-blue-500'
+                                                parseFloat(alert.prob) > 65 ? 'text-amber-500' : 'text-blue-500'
                                                 }`}>
                                                 {alert.prob}
                                             </span>
