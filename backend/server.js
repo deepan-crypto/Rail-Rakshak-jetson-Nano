@@ -35,10 +35,14 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+// Sanitize MONGO_URI — strip empty query params like &appName= that Atlas sometimes includes
+const rawMongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak';
+const MONGO_URI = rawMongoUri.replace(/([&?])[^=&]+=[&$]/g, '$1').replace(/[?&]$/, '');
+
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak')
+mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+    .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
 
 // Login Log Schema
 const LoginLogSchema = new mongoose.Schema({
