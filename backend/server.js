@@ -9,11 +9,18 @@ import { Server as SocketIOServer } from 'socket.io';
 
 dotenv.config();
 
+// Allowed origins: local dev + Vercel production frontend
+const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,           // e.g. https://rail-rakshak.vercel.app
+].filter(Boolean);
+
 const app = express();
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
     cors: {
-        origin: ["http://localhost:5173", "http://localhost:3000", "https://vercel.app"],
+        origin: ALLOWED_ORIGINS,
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -134,8 +141,8 @@ app.post('/api/telemetry', async (req, res) => {
 
         // Validate payload
         if (!timestamp || !gps_location || !hazards || !image_stream) {
-            return res.status(400).json({ 
-                error: 'Missing required fields: timestamp, gps_location, hazards, image_stream' 
+            return res.status(400).json({
+                error: 'Missing required fields: timestamp, gps_location, hazards, image_stream'
             });
         }
 
@@ -162,8 +169,8 @@ app.post('/api/telemetry', async (req, res) => {
             receivedAt: new Date().toISOString()
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Telemetry received and broadcasted',
             hazardCount: hazards.length
         });
