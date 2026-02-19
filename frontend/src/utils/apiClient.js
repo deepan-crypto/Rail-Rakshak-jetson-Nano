@@ -1,12 +1,15 @@
 // API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+// Socket.io URL (same server as API)
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
 // Create axios-like fetch wrapper
 const apiClient = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const token = localStorage.getItem('railRakshakToken');
-    
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
