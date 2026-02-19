@@ -75,20 +75,20 @@ app.post('/api/login', async (req, res) => {
     if (CREDENTIALS[username] && CREDENTIALS[username] === password) {
         console.log(`✅ [LOGIN SUCCESS] Access Granted for ${username}`);
 
-        // Generate JWT
+        // Generate JWT — respond immediately, don't wait for DB
         const token = jwt.sign({ username, role: username }, JWT_SECRET, { expiresIn: '2h' });
-
-        // Log to MongoDB
-        await new LoginLog({ username, status: 'SUCCESS', ip, userAgent }).save();
-
         res.json({ success: true, message: 'Login successful', role: username, token });
+
+        // Log to MongoDB in background (non-blocking)
+        new LoginLog({ username, status: 'SUCCESS', ip, userAgent }).save()
+            .catch(err => console.error('⚠️  Login log write failed (DB may be offline):', err.message));
     } else {
         console.log(`❌ [LOGIN FAILED] Invalid credentials for ${username}`);
-
-        // Log to MongoDB
-        await new LoginLog({ username, status: 'FAILED', ip, userAgent }).save();
-
         res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+        // Log to MongoDB in background (non-blocking)
+        new LoginLog({ username, status: 'FAILED', ip, userAgent }).save()
+            .catch(err => console.error('⚠️  Login log write failed (DB may be offline):', err.message));
     }
 });
 
