@@ -10,11 +10,14 @@ import { Server as SocketIOServer } from 'socket.io';
 dotenv.config();
 
 // Allowed origins: local dev + Vercel production frontend
-const ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.FRONTEND_URL,           // e.g. https://rail-rakshak.vercel.app
-].filter(Boolean);
+// If FRONTEND_URL is not set we fall back to allowing all origins (safe for free-tier demos)
+const ALLOWED_ORIGINS = process.env.FRONTEND_URL
+    ? [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        process.env.FRONTEND_URL,       // e.g. https://rail-rakshak.vercel.app
+    ]
+    : true;                             // Allow all when not configured
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,9 +34,22 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || '*',
+    credentials: true
+}));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+
+// ── Health / keep-alive endpoints ──────────────────────────────────────────
+// GET /health  — Jetson calls this on startup to wake the Render server
+// GET /api/ping — Frontend calls this every 10 min to prevent Render sleeping
+app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', time: new Date().toISOString() });
+});
+app.get('/api/ping', (_req, res) => {
+    res.json({ pong: true, time: new Date().toISOString() });
+});
 
 // Sanitize MONGO_URI — strip empty query params like &appName= that Atlas sometimes includes
 const rawMongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak';
