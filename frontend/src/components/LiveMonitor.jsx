@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { AlertTriangle, MapPin, Gauge, Send, ScanLine, WifiOff, Wifi } from 'lucide-react';
 
-// Socket URL from env — falls back to localhost for dev
+// Socket + API URL from env — falls back to localhost for dev
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function LiveMonitor({ cameraId }) {
     const [connected, setConnected] = useState(false);
@@ -56,7 +57,14 @@ export default function LiveMonitor({ cameraId }) {
             if (data) setTelemetry(data);
         });
 
+        // ── Keep-alive ping every 10 min so Render free-tier doesn't sleep ──
+        // This hits /health while the user has the dashboard open.
+        const keepAlive = setInterval(() => {
+            fetch(`${API_URL}/health`).catch(() => { });
+        }, 10 * 60 * 1000);
+
         return () => {
+            clearInterval(keepAlive);
             socket.disconnect();
         };
     }, []);
@@ -84,7 +92,7 @@ export default function LiveMonitor({ cameraId }) {
                         {/* Live Camera Feed from Jetson Nano */}
                         {imageBase64 ? (
                             <img
-                                src={`data:image/jpeg;base64,${imageBase64}`}
+                                src={imageBase64}
                                 alt="Jetson Nano Live Detection Feed"
                                 className="w-full h-full object-cover"
                             />
