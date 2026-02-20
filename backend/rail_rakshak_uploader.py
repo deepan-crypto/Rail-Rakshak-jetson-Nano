@@ -1,14 +1,23 @@
 """
 Rail Rakshak Backend Integration Module
-Drop this module into your Jetson project and import it in c.py
+Drop this module into your Jetson project and import it in your detection script.
 
 Usage:
     from rail_rakshak_uploader import TelemetryUploader
-    
-    uploader = TelemetryUploader(backend_url="http://192.168.1.100:5000")
-    
-    # In your inference loop:
-    uploader.send(frame, yolov5_results)
+
+    uploader = TelemetryUploader(backend_url="https://your-backend.onrender.com/api/telemetry")
+
+    # IMPORTANT: Wake the backend first (prevents Render cold-start drops)
+    uploader.wake_backend()
+
+    # In your inference loop — call send() on EVERY frame.
+    # Frames are sent continuously whether or not a pothole/crack is detected.
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        results = model(frame)
+        uploader.send(frame, results)   # Always called — not just on detection
 """
 
 import requests
@@ -17,31 +26,43 @@ import cv2
 from datetime import datetime
 from threading import Thread
 import queue
-import json
+import time
 
 
 class TelemetryUploader:
     """
-    Sends YOLOv5 detections to Rail Rakshak backend in real-time
+    Streams YOLOv5 frames to the Rail Rakshak backend in real-time.
+
+    Frames are sent CONTINUOUSLY — every frame regardless of whether
+    a hazard is detected.  The backend and frontend will show the live
+    video feed at all times; bounding boxes appear only when hazards exist.
     """
-    
-    def __init__(self, backend_url="https://your-backend.onrender.com/api/telemetry", 
-                 gps_lat=28.6139, gps_lon=77.2090,
-                 send_interval=2, jpeg_quality=80, 
-                 async_mode=False, buffer_size=10):
+
+    def __init__(self,
+                 backend_url="https://your-backend.onrender.com/api/telemetry",
+                 gps_lat=28.6139,
+                 gps_lon=77.2090,
+                 send_interval=1,          # 1 = send EVERY frame (always-on stream)
+                 jpeg_quality=70,          # Slightly lower quality for bandwidth
+                 async_mode=True,          # Non-blocking by default
+                 buffer_size=5):
         """
-        Initialize uploader
-        
         Args:
-            backend_url: Full URL to /api/telemetry endpoint
-            gps_lat: GPS latitude (default: New Delhi)
-            gps_lon: GPS longitude
-            send_interval: Send every N frames (2 = 30fps → 15fps data)
-            jpeg_quality: JPEG compression (0-100)
-            async_mode: Send in background thread (doesn't block inference)
-            buffer_size: Queue size for async mode
+            backend_url:    Full URL to /api/telemetry endpoint on Render.
+            gps_lat:        GPS latitude (update this for your actual location).
+            gps_lon:        GPS longitude.
+            send_interval:  Send 1 out of every N frames.
+                            Default 1 = send every frame (always streaming).
+                            Set to 2 to halve bandwidth (send every 2nd frame).
+            jpeg_quality:   JPEG compression quality (0-100).
+                            70 is a good balance of quality vs. bandwidth.
+            async_mode:     True = send in a background thread (doesn't slow
+                            down the detection loop). Recommended for Jetson.
+            buffer_size:    How many frames to queue in async mode.
+                            Older frames are dropped when the queue is full.
         """
         self.backend_url = backend_url
+        self.health_url = backend_url.replace('/api/telemetry', '/health')
         self.gps_lat = gps_lat
         self.gps_lon = gps_lon
         self.send_interval = send_interval
@@ -50,166 +71,217 @@ class TelemetryUploader:
         self.frame_counter = 0
         self.sent_count = 0
         self.error_count = 0
-        
+
         # For async mode
         if async_mode:
             self.queue = queue.Queue(maxsize=buffer_size)
             self.worker_thread = Thread(target=self._worker, daemon=True)
             self.worker_thread.start()
-        
-        # Test connection
-        try:
-            r = requests.get(backend_url.replace('/api/telemetry', ''), timeout=2)
-            print(f"✅ Backend reachable: {self.backend_url}")
-        except:
-            print(f"⚠️ Warning: Backend might not be running at {backend_url}")
-    
+
+    # ------------------------------------------------------------------
+    # PUBLIC: Wake the backend before starting the inference loop
+    # ------------------------------------------------------------------
+
+    def wake_backend(self, max_wait=45):
+        """
+        Ping the backend /health endpoint until it responds.
+
+        Render free-tier services sleep after 15 min of inactivity.
+        The first request takes up to ~30 seconds to wake the server.
+        Call this ONCE at startup before your inference loop.
+
+        Args:
+            max_wait: Maximum seconds to wait for the server to wake up.
+
+        Returns:
+            True if the backend is awake, False if it timed out.
+        """
+        print(f"🔔 Waking backend at {self.health_url} ...")
+        start = time.time()
+        while time.time() - start < max_wait:
+            try:
+                r = requests.get(self.health_url, timeout=10)
+                if r.status_code == 200:
+                    elapsed = time.time() - start
+                    print(f"✅ Backend awake! ({elapsed:.1f}s)")
+                    return True
+            except Exception:
+                pass
+            print(f"   ⏳ Still waking... ({int(time.time()-start)}s elapsed)")
+            time.sleep(3)
+
+        print(f"❌ Backend did not respond within {max_wait}s. Continuing anyway.")
+        return False
+
+    # ------------------------------------------------------------------
+    # INTERNAL HELPERS
+    # ------------------------------------------------------------------
+
     def _encode_frame(self, frame):
-        """Convert OpenCV frame to Base64 JPEG"""
-        _, buffer = cv2.imencode('.jpg', frame, 
-                                  [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality])
-        return "data:image/jpeg;base64," + base64.b64encode(buffer).decode()
-    
+        """Convert OpenCV (BGR) frame to a Base64 data-URI string."""
+        # Optionally resize to reduce payload size (comment out for full res)
+        # frame = cv2.resize(frame, (640, 360))
+        _, buffer = cv2.imencode(
+            '.jpg', frame,
+            [cv2.IMWRITE_JPEG_QUALITY, self.jpeg_quality]
+        )
+        b64 = base64.b64encode(buffer).decode('utf-8')
+        return "data:image/jpeg;base64," + b64   # Full data-URI — frontend uses this directly
+
     def _parse_detections(self, results):
-        """Convert YOLOv5 results to hazard format"""
+        """Convert YOLOv5 results object to hazard list."""
         hazards = []
-        
+        if results is None:
+            return hazards
+
         if hasattr(results, 'xyxy') and len(results.xyxy[0]) > 0:
             for det in results.xyxy[0]:
                 x1, y1, x2, y2, conf, cls = det.tolist()
                 hazards.append({
-                    "class": int(cls),
-                    "name": results.names[int(cls)],
+                    "class":      int(cls),
+                    "name":       results.names[int(cls)],
                     "confidence": float(conf),
-                    "xmin": int(x1),
-                    "ymin": int(y1),
-                    "xmax": int(x2),
-                    "ymax": int(y2)
+                    "xmin":       int(x1),
+                    "ymin":       int(y1),
+                    "xmax":       int(x2),
+                    "ymax":       int(y2)
                 })
-        
         return hazards
-    
+
     def _build_payload(self, frame, detections):
-        """Build JSON payload"""
+        """Build JSON payload. Always includes image_stream."""
         return {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp":    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "gps_location": {
                 "lat": self.gps_lat,
                 "lon": self.gps_lon
             },
-            "hazards": detections,
+            "hazards":      detections,   # Empty list [] when no hazard — that's fine
             "image_stream": self._encode_frame(frame)
         }
-    
+
     def _send_sync(self, payload):
-        """Send synchronously (blocks until done or timeout)"""
+        """Send telemetry payload synchronously. Timeout is 15s (survives Render cold-starts)."""
         try:
             response = requests.post(
                 self.backend_url,
                 json=payload,
-                timeout=3,
+                timeout=15,                # 15s timeout — Render cold starts can take ~10-30s
                 headers={"Content-Type": "application/json"}
             )
-            
             if response.status_code == 200:
                 self.sent_count += 1
                 return True
             else:
-                print(f"⚠️ Backend returned {response.status_code}")
+                print(f"⚠️  Backend returned {response.status_code}: {response.text[:80]}")
                 self.error_count += 1
                 return False
-                
+
         except requests.exceptions.Timeout:
-            print("⚠️ Request timeout (backend slow?)")
+            print("⚠️  Request timeout — backend may be waking up (Render cold-start)")
             self.error_count += 1
             return False
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
+            print(f"⚠️  Connection error: {e}")
             self.error_count += 1
             return False
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ Unexpected error: {e}")
             self.error_count += 1
             return False
-    
+
     def _worker(self):
-        """Background thread for async sending"""
+        """Background thread — drains the frame queue and sends to backend."""
         while True:
             try:
                 payload = self.queue.get(timeout=1)
                 self._send_sync(payload)
+                self.queue.task_done()
             except queue.Empty:
                 continue
             except Exception as e:
                 print(f"Worker error: {e}")
-    
-    def send(self, frame, yolov5_results):
+
+    # ------------------------------------------------------------------
+    # PUBLIC: Send a frame (call this on EVERY frame in your loop)
+    # ------------------------------------------------------------------
+
+    def send(self, frame, yolov5_results=None):
         """
-        Send frame + detections to backend
-        
+        Send the current camera frame + any detections to the backend.
+
+        Call this on EVERY frame — not just when a pothole is detected.
+        When there are no hazards, 'hazards' is sent as an empty list []
+        so the frontend still displays the live video feed.
+
         Args:
-            frame: OpenCV image (BGR)
-            yolov5_results: YOLOv5 results object from model(frame)
-        
+            frame:           OpenCV image (BGR) — the raw camera frame.
+            yolov5_results:  YOLOv5 results from model(frame). Pass None
+                             if you don't have detection results yet.
+
         Returns:
-            True if sent, False otherwise
+            True if the frame was queued/sent, False if skipped.
         """
         self.frame_counter += 1
-        
-        # Skip frames based on interval
+
+        # Skip frames to control upload rate (default send_interval=1 → every frame)
         if self.frame_counter % self.send_interval != 0:
             return False
-        
+
         try:
-            # Parse detections
             detections = self._parse_detections(yolov5_results)
-            
-            # Build payload
             payload = self._build_payload(frame, detections)
-            
-            # Send
+
             if self.async_mode:
                 try:
-                    self.queue.put(payload, block=False)
+                    # Non-blocking: drop oldest if queue is full
+                    self.queue.put_nowait(payload)
                     return True
                 except queue.Full:
-                    # Queue full, skip this frame
+                    # Drop this frame rather than block the detection loop
                     return False
             else:
                 return self._send_sync(payload)
-        
+
         except Exception as e:
             print(f"❌ Error in send(): {e}")
             return False
-    
+
+    # ------------------------------------------------------------------
+    # STATS
+    # ------------------------------------------------------------------
+
     def get_stats(self):
-        """Get upload statistics"""
         return {
             "frames_processed": self.frame_counter,
-            "frames_sent": self.sent_count,
-            "errors": self.error_count,
-            "success_rate": f"{100*self.sent_count/max(self.frame_counter,1):.1f}%"
+            "frames_sent":      self.sent_count,
+            "errors":           self.error_count,
+            "success_rate":     f"{100*self.sent_count/max(self.frame_counter,1):.1f}%"
         }
-    
+
     def print_stats(self):
-        """Print statistics"""
-        stats = self.get_stats()
+        s = self.get_stats()
         print(f"\n📊 Telemetry Stats:")
-        print(f"   Frames: {stats['frames_processed']}")
-        print(f"   Sent: {stats['frames_sent']}")
-        print(f"   Errors: {stats['errors']}")
-        print(f"   Success: {stats['success_rate']}")
+        print(f"   Frames captured : {s['frames_processed']}")
+        print(f"   Frames sent     : {s['frames_sent']}")
+        print(f"   Errors          : {s['errors']}")
+        print(f"   Success rate    : {s['success_rate']}")
 
 
 # ============================================================
-# SIMPLE WRAPPER FOR EVEN EASIER USE
+# QUICK SETUP HELPER
 # ============================================================
 
-def create_uploader(backend_ip="192.168.1.100", backend_port=5000, **kwargs):
+def create_uploader(backend_url="https://your-backend.onrender.com/api/telemetry",
+                    gps_lat=28.6139, gps_lon=77.2090, **kwargs):
     """
-    Quick setup function
-    
-    Usage:
-        uploader = create_uploader("192.168.1.100")
+    Quick setup function.
+
+    Example:
+        uploader = create_uploader("https://rail-rakshak-backend.onrender.com/api/telemetry")
+        uploader.wake_backend()   # Always call this first!
     """
-    backend_url = f"http://{backend_ip}:{backend_port}/api/telemetry"
-    return TelemetryUploader(backend_url, **kwargs)
+    return TelemetryUploader(backend_url=backend_url,
+                             gps_lat=gps_lat,
+                             gps_lon=gps_lon,
+                             **kwargs)
