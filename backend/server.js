@@ -10,12 +10,13 @@ import { Server as SocketIOServer } from 'socket.io';
 dotenv.config();
 
 // Allowed origins: local dev + Vercel production frontend
-// If FRONTEND_URL is not set we fall back to allowing all origins (safe for free-tier demos)
-const ALLOWED_ORIGINS = process.env.FRONTEND_URL
+// Strip trailing slash to avoid CORS mismatch (browser sends origin without trailing slash)
+const FRONTEND_URL = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+const ALLOWED_ORIGINS = FRONTEND_URL
     ? [
         'http://localhost:5173',
         'http://localhost:3000',
-        process.env.FRONTEND_URL,       // e.g. https://rail-rakshak.vercel.app
+        FRONTEND_URL,                   // e.g. https://rail-rakshak.vercel.app
     ]
     : true;                             // Allow all when not configured
 
@@ -35,7 +36,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: FRONTEND_URL || '*',
     credentials: true
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
