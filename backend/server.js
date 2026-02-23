@@ -53,7 +53,7 @@ app.get('/api/ping', (_req, res) => {
 
 // Sanitize MONGO_URI — strip empty query params like &appName= that Atlas sometimes includes
 const rawMongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak';
-const MONGO_URI = rawMongoUri.replace(/([&?])[^=&]+=[&$]/g, '$1').replace(/[?&]$/, '');
+const MONGO_URI = rawMongoUri.replace(/[?&][^=&]+=(?=&|$)/g, '').replace(/[?&]$/g, '');
 
 // MongoDB Connection
 mongoose.connect(MONGO_URI)
