@@ -142,7 +142,7 @@ def main():
                 w, h   = 200, 120
                 hazards = [{
                     "class":      0,
-                    "name":       "Pothole",
+                    "name":       "Railway Track Crack",
                     "confidence": 0.91,
                     "xmin": cx - w // 2,
                     "ymin": cy - h // 2,
@@ -167,7 +167,7 @@ def main():
                               (h_["xmin"], h_["ymin"]),
                               (h_["xmax"], h_["ymax"]),
                               (0, 0, 255), 2)
-                cv2.putText(display, "POTHOLE 91%",
+                cv2.putText(display, "TRACK CRACK 91%",
                             (h_["xmin"], h_["ymin"] - 8),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 2)
 

@@ -82,7 +82,7 @@ const LiveDashcam = () => {
     }, []);
 
     const hazardColorMap = {
-        'Pothole': 'from-red-600 to-red-700',
+        'Railway Track Crack': 'from-red-600 to-red-700',
         'Crack': 'from-yellow-600 to-yellow-700',
         'Debris': 'from-orange-600 to-orange-700',
         'Obstacle': 'from-purple-600 to-purple-700'
@@ -230,7 +230,7 @@ const LiveDashcam = () => {
                                             <div
                                                 key={log.id}
                                                 className={`p-3 border-l-4 ${
-                                                    log.hazardName === 'Pothole'
+                                                    log.hazardName === 'Railway Track Crack'
                                                         ? 'border-red-500 bg-red-950 bg-opacity-20'
                                                         : log.hazardName === 'Crack'
                                                         ? 'border-yellow-500 bg-yellow-950 bg-opacity-20'

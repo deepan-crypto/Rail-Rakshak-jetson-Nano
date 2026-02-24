@@ -16,7 +16,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 
 // Sample hazard names
 const HAZARD_TYPES = [
-    { name: 'Pothole', class: 0 },
+    { name: 'Railway Track Crack', class: 0 },
     { name: 'Crack', class: 1 },
     { name: 'Debris', class: 2 },
     { name: 'Obstacle', class: 3 }
