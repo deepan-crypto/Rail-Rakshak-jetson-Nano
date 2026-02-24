@@ -56,8 +56,16 @@ app.get('/api/ping', (_req, res) => {
 const rawMongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/rail-rakshak';
 const MONGO_URI = rawMongoUri.replace(/[?&][^=&]+=(?=&|$)/g, '').replace(/[?&]$/g, '');
 
-// MongoDB Connection
-mongoose.connect(MONGO_URI)
+// MongoDB Connection with timeout and pooling options
+mongoose.connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 30000,  // 30s to select a server
+    socketTimeoutMS: 45000,           // 45s socket timeout
+    connectTimeoutMS: 30000,          // 30s connection timeout
+    maxPoolSize: 10,                  // Connection pool size
+    minPoolSize: 2,                   // Minimum connections to maintain
+    retryWrites: true,
+    retryReads: true
+})
     .then(() => console.log('✅ MongoDB Connected'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
 
@@ -172,16 +180,7 @@ app.post('/api/telemetry', async (req, res) => {
             console.log(`   ⚠️  ${hazard.name} (Confidence: ${(hazard.confidence * 100).toFixed(2)}%)`);
         }
 
-        // Save to MongoDB for historical tracking
-        const telemetryEntry = new Telemetry({
-            timestamp,
-            gps_location,
-            hazards,
-            image_stream
-        });
-        await telemetryEntry.save();
-
-        // Broadcast to all connected WebSocket clients in real-time
+        // Broadcast to all connected WebSocket clients in real-time (respond fast)
         io.emit('telemetry-update', {
             timestamp,
             gps_location,
@@ -189,6 +188,16 @@ app.post('/api/telemetry', async (req, res) => {
             image_stream,
             receivedAt: new Date().toISOString()
         });
+
+        // Save to MongoDB in background (non-blocking to avoid timeout)
+        const telemetryEntry = new Telemetry({
+            timestamp,
+            gps_location,
+            hazards,
+            image_stream
+        });
+        telemetryEntry.save()
+            .catch(err => console.error('⚠️  Telemetry save failed (DB may be slow):', err.message));
 
         res.json({
             success: true,
