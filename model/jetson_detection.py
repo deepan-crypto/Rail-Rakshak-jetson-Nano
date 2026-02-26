@@ -1,31 +1,16 @@
-"""
-jetson_detection.py — Rail Rakshak Live Detection Script
-Run this on the Jetson Nano Orin to start streaming.
-
-This script streams EVERY camera frame to the backend (whether or not a
-pothole/crack is detected), so the dashboard always shows a live feed.
-
-Usage:
-    python3 jetson_detection.py
-
-Requirements:
-    pip install torch torchvision opencv-python requests
-    (YOLOv5 installed — see https://github.com/ultralytics/yolov5)
-"""
-
 import cv2
 import torch
 from rail_rakshak_uploader import TelemetryUploader
 
 # ─── CONFIGURATION ───────────────────────────────────────────────────────────
-BACKEND_URL  = "https://your-backend.onrender.com/api/telemetry"  # ← your Render URL
+BACKEND_URL  = "https://rail-rakshak-jetson-nano.onrender.com/api/telemetry"  # ← your Render URL
 MODEL_PATH   = "best.pt"          # Path to your trained YOLOv5 weights
 CAMERA_INDEX = 0                  # 0 = first camera (CSI or USB)
 GPS_LAT      = 28.6139            # ← Your GPS latitude
 GPS_LON      = 77.2090            # ← Your GPS longitude
 SEND_EVERY_N = 1                  # 1 = stream every frame; 2 = every 2nd frame, etc.
 JPEG_QUALITY = 65                 # Lower = smaller payload, less bandwidth used
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 
 def main():
