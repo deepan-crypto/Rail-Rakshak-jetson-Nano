@@ -94,8 +94,21 @@ def load_model():
     model = torch.hub.load('ultralytics/yolov5', 'custom',
                            path=MODEL_PATH, force_reload=False)
     model.conf = CONFIDENCE
+    
+    # Rename class labels from pothole to Track Crack
+    for idx, name in model.names.items():
+        if name.lower() == "pothole":
+            model.names[idx] = "Track Crack"
+    
     print("✅ Model loaded.")
     return model
+
+
+# Map model class names to display names
+LABEL_MAP = {
+    "pothole": "Track Crack",
+    "Pothole": "Track Crack",
+}
 
 
 def parse_detections(results):
@@ -106,8 +119,10 @@ def parse_detections(results):
     
     for det in detections:
         x1, y1, x2, y2, conf, cls = det.tolist()
+        original_label = names[int(cls)]
+        label = LABEL_MAP.get(original_label, original_label)
         hazards.append({
-            "type": names[int(cls)],
+            "type": label,
             "confidence": round(conf * 100, 1),
             "xmin": int(x1),
             "ymin": int(y1),
