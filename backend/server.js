@@ -14,9 +14,7 @@ dotenv.config();
 const FRONTEND_URL = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
 const ALLOWED_ORIGINS = FRONTEND_URL
     ? [
-        'http://localhost:5173',
-        'http://localhost:3000',
-        FRONTEND_URL,                   // e.g. https://rail-rakshak.vercel.app
+                 // e.g. https://rail-rakshak.vercel.app
     ]
     : true;                             // Allow all when not configured
 
